@@ -1,0 +1,90 @@
+---
+- name: Install Telegraf Service
+  hosts: all
+  tasks:
+  - name: Disable SELinux 
+    selinux:
+      state: disabled
+
+  - name: Disabled Firewalld
+    service:
+      name: firewalld
+      state: stopped
+
+  - name: Prepare yum Package Manager of Telegraf
+    shell:  
+      cmd: |
+        cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
+        [influxdb]
+        name = InfluxDB Repository - RHEL \$releasever
+        baseurl = https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
+        enabled = 1
+        gpgcheck = 1
+        gpgkey = https://repos.influxdata.com/influxdb.key
+        EOF
+
+  - name: Installing Telegraf
+    yum:
+      name: telegraf
+      state: latest
+
+  - name: Make a Backup File of telegraf.conf to telegraf.bak
+    shell:  
+      cmd: mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf.bak
+
+  - name: Make File and Setup Configuration of telegraf.conf
+    shell:
+      cmd: |
+        cat <<EOF | sudo tee /etc/telegraf/telegraf.conf
+        [global_tags]
+
+        [agent]
+        interval = "2s"
+        round_interval = true
+        metric_batch_size = 1000
+        metric_buffer_limit = 10000
+        collection_jitter = "0s"
+        flush_interval = "2s"
+        flush_jitter = "0s"
+        precision = ""
+        hostname = ""
+        omit_hostname = false
+        ###############################################################################
+        #                            OUTPUT PLUGINS                                   #
+        ###############################################################################
+
+        [[outputs.prometheus_client]]
+        listen = ":8086"
+        metric_version = 2
+        path = "/metrics"
+        expiration_interval = "0s"
+        collectors_exclude = ["gocollector", "process"]
+        string_as_label = true
+
+        [[inputs.system]]
+
+        [[inputs.cpu]]
+        ## Whether to report per-cpu stats or not
+        percpu = true
+        ## Whether to report total system cpu stats or not
+        totalcpu = true
+
+        [[inputs.mem]]
+
+        [[inputs.disk]]
+        ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+
+        [[inputs.diskio]]
+        devices = ["sda"]
+        skip_serial_number = false
+        EOF
+
+  - name: Restart Telegraf Service
+    service: 
+      name: telegraf
+      state: restarted
+
+  - name: Enable Telegraf Service
+    service:
+      name: telegraf
+      enabled: yes
