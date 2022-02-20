@@ -18,4 +18,4 @@ Installing Telegraf Service Using Ansible on CentOS 7
 Telegraf Runs Port on **8086**
 
 If you want to add different/some plugin, go to this link:
-https://github.com/influxdata/telegraf/tree/master/plugins
+> https://github.com/influxdata/telegraf/tree/master/plugins
