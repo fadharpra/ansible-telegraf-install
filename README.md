@@ -1,5 +1,5 @@
 # ansible-telegraf-install
-Installing Telegraf Service on CentOS 7
+Installing Telegraf Service Using Ansible on CentOS 7
 
 # telegraf.conf Containing Plugin of:
 > [[outputs.prometheus_client]], [[inputs.system]], [[inputs.cpu]], [[inputs.mem]], [[inputs.disk]], [[inputs.diskio]]
